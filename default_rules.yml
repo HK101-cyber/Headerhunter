@@ -1,0 +1,154 @@
+# HTTPHeaderHunter - Default Security Rules
+# 
+# This file defines security checks for HTTP headers based on OWASP Secure Headers Project
+# Each rule specifies:
+#   - name: Header name to check
+#   - severity: CRITICAL, HIGH, MEDIUM, LOW, INFO
+#   - description: What the header does and why it matters
+#   - check: Type of check (missing, present, value)
+#   - recommendation: How to fix the issue
+#
+# For custom rules: Copy this file, modify as needed, and use with --rules flag
+
+# ===== CRITICAL SECURITY HEADERS =====
+# These headers prevent high-impact attacks like XSS, SSL stripping, and data theft
+
+rules:
+  # Content Security Policy (CSP) - Prevents XSS attacks
+  - name: "Content-Security-Policy"
+    severity: "CRITICAL"
+    description: "Prevents cross-site scripting (XSS) attacks by controlling which resources can be loaded"
+    check: "missing"
+    recommendation: |
+      Implement strict CSP policy:
+      Content-Security-Policy: default-src 'self'; script-src 'self' https://*.trusted.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*
+
+  # HTTP Strict Transport Security (HSTS) - Enforces HTTPS
+  - name: "Strict-Transport-Security"
+    severity: "CRITICAL"
+    description: "Forces browsers to use HTTPS only, preventing SSL-stripping attacks"
+    check: "missing"
+    recommendation: |
+      Enable HSTS with long max-age:
+      Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+  # X-Frame-Options - Prevents clickjacking
+  - name: "X-Frame-Options"
+    severity: "HIGH"
+    description: "Prevents clickjacking attacks by controlling if page can be embedded in frames"
+    check: "missing"
+    recommendation: |
+      Block all framing:
+      X-Frame-Options: DENY
+      
+      OR allow same-origin only:
+      X-Frame-Options: SAMEORIGIN
+
+# ===== HIGH PRIORITY SECURITY HEADERS =====
+# These headers mitigate common web vulnerabilities
+
+  # X-Content-Type-Options - Prevents MIME-sniffing
+  - name: "X-Content-Type-Options"
+    severity: "HIGH"
+    description: "Prevents browsers from MIME-sniffing content types, reducing XSS risks"
+    check: "missing"
+    recommendation: |
+      Disable MIME-sniffing:
+      X-Content-Type-Options: nosniff
+
+  # Referrer-Policy - Controls referrer information
+  - name: "Referrer-Policy"
+    severity: "HIGH"
+    description: "Controls how much referrer information is sent with requests, protecting sensitive URLs"
+    check: "missing"
+    recommendation: |
+      Send referrer only for same-origin requests:
+      Referrer-Policy: strict-origin-when-cross-origin
+      
+      OR be more restrictive:
+      Referrer-Policy: no-referrer
+
+  # Permissions-Policy - Controls browser features
+  - name: "Permissions-Policy"
+    severity: "MEDIUM"
+    description: "Controls access to browser features like camera, microphone, geolocation"
+    check: "missing"
+    recommendation: |
+      Disable all sensitive features:
+      Permissions-Policy: geolocation=(), camera=(), microphone=(), fullscreen=(), payment=()
+
+# ===== MODERN SECURITY HEADERS =====
+# These headers provide additional isolation and protection
+
+  # Cross-Origin-Embedder-Policy (COEP)
+  - name: "Cross-Origin-Embedder-Policy"
+    severity: "MEDIUM"
+    description: "Prevents loading of cross-origin resources without explicit permission"
+    check: "missing"
+    recommendation: |
+      Require cross-origin resources to opt-in:
+      Cross-Origin-Embedder-Policy: require-corp
+
+  # Cross-Origin-Opener-Policy (COOP)
+  - name: "Cross-Origin-Opener-Policy"
+    severity: "MEDIUM"
+    description: "Isolates browsing context from other origins, preventing cross-origin attacks"
+    check: "missing"
+    recommendation: |
+      Block cross-origin window access:
+      Cross-Origin-Opener-Policy: same-origin
+
+  # Cross-Origin-Resource-Policy (CORP)
+  - name: "Cross-Origin-Resource-Policy"
+    severity: "LOW"
+    description: "Blocks cross-origin resource loading"
+    check: "missing"
+    recommendation: |
+      Block all cross-origin requests:
+      Cross-Origin-Resource-Policy: same-origin
+
+# ===== INFORMATION DISCLOSURE HEADERS =====
+# These headers leak sensitive information about server technology
+
+  # Server header - Reveals server software
+  - name: "Server"
+    severity: "LOW"
+    description: "Reveals server software and version information, aiding attackers"
+    check: "present"
+    recommendation: |
+      Remove or sanitize Server header:
+      Server: (remove completely or set to generic value)
+
+  # X-Powered-By header - Reveals backend technology
+  - name: "X-Powered-By"
+    severity: "LOW"
+    description: "Reveals backend technology stack, making targeted attacks easier"
+    check: "present"
+    recommendation: |
+      Remove X-Powered-By header completely
+
+# ===== VALUE-BASED CHECKS =====
+# These rules check specific patterns or values within headers
+
+value_checks:
+  # HSTS max-age should be at least 1 year
+  - name: "Strict-Transport-Security"
+    pattern: 'max-age=(\\d+)'
+    min_value: 31536000
+    severity: "MEDIUM"
+    description: "HSTS max-age should be at least 1 year (31536000 seconds) for effective protection"
+    recommendation: |
+      Increase max-age value:
+      Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+  # CSP should not contain unsafe directives
+  - name: "Content-Security-Policy"
+    patterns:
+      - "'unsafe-inline'"
+      - "'unsafe-eval'"
+      - "http://"
+    severity: "HIGH"
+    description: "CSP contains unsafe directives that weaken protection"
+    recommendation: |
+      Remove unsafe directives and use nonces/hashes instead:
+      Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-random123'; style-src 'self'
