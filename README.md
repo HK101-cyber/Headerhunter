@@ -48,7 +48,6 @@ The default ruleset evaluates the following headers:
 
 ### Setup (Kali / Debian / macOS / Linux)
 
-```bash
 git clone https://github.com/HK101-cyber/headerhunter.git
 cd headerhunter
 
