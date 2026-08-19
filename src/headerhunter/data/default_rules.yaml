@@ -1,0 +1,77 @@
+rules:
+  - name: Content-Security-Policy
+    severity: HIGH
+    description: Prevents cross-site scripting (XSS) and data injection attacks.
+    check: missing
+    recommendation: Implement a strict Content-Security-Policy.
+  - name: Strict-Transport-Security
+    severity: HIGH
+    description: Enforces HTTPS and prevents SSL-stripping attacks.
+    check: missing
+    recommendation: Enable HSTS with a long max-age.
+  - name: X-Frame-Options
+    severity: MEDIUM
+    description: Prevents clickjacking attacks.
+    check: missing
+    recommendation: Set X-Frame-Options to DENY or SAMEORIGIN.
+  - name: X-Content-Type-Options
+    severity: HIGH
+    description: Prevents MIME-sniffing.
+    check: missing
+    recommendation: Set to nosniff.
+  - name: Referrer-Policy
+    severity: MEDIUM
+    description: Controls referrer information sent with requests.
+    check: missing
+    recommendation: Set to strict-origin-when-cross-origin or no-referrer.
+  - name: Permissions-Policy
+    severity: LOW
+    description: Controls access to browser features.
+    check: missing
+    recommendation: Disable sensitive features using Permissions-Policy.
+  - name: Cross-Origin-Opener-Policy
+    severity: LOW
+    description: Isolates browsing context.
+    check: missing
+    recommendation: Set to same-origin.
+  - name: Cross-Origin-Resource-Policy
+    severity: INFO
+    description: Blocks cross-origin resource loading.
+    check: missing
+    recommendation: Set to same-origin.
+  - name: Cross-Origin-Embedder-Policy
+    severity: INFO
+    description: Prevents loading cross-origin resources without permission.
+    check: missing
+    recommendation: Set to require-corp.
+  - name: Server
+    severity: LOW
+    description: Reveals server software.
+    check: present
+    recommendation: Remove or obfuscate the Server header.
+  - name: X-Powered-By
+    severity: LOW
+    description: Reveals backend technology.
+    check: present
+    recommendation: Remove the X-Powered-By header.
+
+value_checks:
+  - name: Strict-Transport-Security
+    pattern: 'max-age\s*=\s*(\d+)'
+    min_value: 31536000
+    severity: MEDIUM
+    description: HSTS max-age is shorter than recommended (1 year).
+    recommendation: Increase max-age to at least 31536000.
+  - name: Strict-Transport-Security
+    pattern: 'max-age\s*=\s*0'
+    severity: HIGH
+    description: HSTS is disabled by setting max-age to 0.
+    recommendation: Set max-age to a large value like 31536000.
+  - name: Content-Security-Policy
+    patterns:
+      - "'unsafe-inline'"
+      - "'unsafe-eval'"
+      - "http://"
+    severity: MEDIUM
+    description: CSP contains unsafe directives.
+    recommendation: Remove unsafe-inline, unsafe-eval, and http:// sources.
